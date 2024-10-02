@@ -11,6 +11,7 @@ const { initializeApp } = require("firebase/app");
 const {getAuth,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    signOut,
     onAuthStateChanged} = require('firebase/auth');
 const {getFirestore, doc, getDoc} = require('firebase/firestore');
 // TODO: Add SDKs for Firebase products that you want to use
@@ -104,3 +105,14 @@ app.post('/login/', async (req, res)=>{
     }
 });
 
+// api handles log off
+app.post('/logoff/', async (req, res)=>{
+    try {
+        await signOut(firebaseAuth);
+        res.status(200);
+        res.send("you are now logged off");
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+    }
+});
