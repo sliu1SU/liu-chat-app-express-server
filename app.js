@@ -83,6 +83,8 @@ app.post('/signup/', async (req, res)=>{
         //console.log("trigger sign up api");
         const userCredential  = await createUserWithEmailAndPassword(firebaseAuth, email, password);
         const user = userCredential.user;
+        // Set the token in a cookie
+        res.cookie('authToken', user.stsTokenManager.accessToken);
         res.status(200);
         res.send(user);
     } catch (e) {
@@ -97,6 +99,8 @@ app.post('/login/', async (req, res)=>{
     try {
         const userCredential  = await signInWithEmailAndPassword(firebaseAuth, email, password);
         const user = userCredential.user;
+        // Set the token in a cookie
+        res.cookie('authToken', user.stsTokenManager.accessToken);
         res.status(200);
         res.send(user);
     } catch (e) {
@@ -109,6 +113,8 @@ app.post('/login/', async (req, res)=>{
 app.post('/logoff/', async (req, res)=>{
     try {
         await signOut(firebaseAuth);
+        // Clear the auth_token cookie
+        res.clearCookie('authToken');
         res.status(200);
         res.send("you are now logged off");
     } catch (e) {
