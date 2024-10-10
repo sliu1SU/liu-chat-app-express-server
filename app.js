@@ -13,7 +13,14 @@ const {getAuth,
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged} = require('firebase/auth');
-const {getFirestore, doc, getDoc} = require('firebase/firestore');
+const {
+    getFirestore,
+    doc,
+    getDoc,
+    getDocs,
+    addDoc,
+    collection
+} = require('firebase/firestore');
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -117,6 +124,78 @@ app.post('/logoff/', async (req, res)=>{
         res.clearCookie('authToken');
         res.status(200);
         res.send("you are now logged off");
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+    }
+});
+
+// api handles create a collection in firebase (chat room)
+app.post('/rooms/', async (req, res)=>{
+    //const {name, desc} = req.body;
+    try {
+        const roomsCollection = collection(db, 'Rooms');
+        const docRef = await addDoc(roomsCollection, req.body);
+        res.status(200);
+        res.send({id: docRef.id});
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+    }
+});
+
+// api handles getting all rooms
+app.get('/rooms/', async (req, res)=>{
+    let rooms = [];
+    try {
+        const roomsCollection = collection(db, 'Rooms');  // Reference the 'Rooms' collection
+        let snapshot = await getDocs(roomsCollection);  // Fetch all documents
+        if (!snapshot.empty) {
+            snapshot = snapshot.docs; // convert to array
+            for (let i = 0; i < snapshot.length; i++) {
+                rooms.push({id: snapshot[i].id});
+            }
+        }
+        res.status(200);
+        res.send(rooms);
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+    }
+});
+
+// api handles add documents to an existing collection (msg)
+app.post('/room/:id', async (req, res)=>{
+    const roomId = req.params.id;  // Extract the ID from the URL
+    try {
+        const msgCollection = collection(db, 'Rooms', roomId, 'Messages');
+        const docRef = await addDoc(msgCollection, req.body);
+        res.status(200);
+        res.send({id: docRef.id});
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+    }
+});
+
+// api handles getting all msgs from a room
+app.get('/room/:id', async (req, res)=>{
+    const roomId = req.params.id;  // Extract the ID from the URL
+    let result = [];
+    try {
+        const msgCollection = collection(db, 'Rooms', roomId, 'Messages');
+        let snapshot = await getDocs(msgCollection);
+        if (!snapshot.empty) {
+           snapshot = snapshot.docs;
+           for (let i = 0; i < snapshot.length; i++) {
+               result.push({
+                   id: snapshot[i].id,
+                   content: snapshot[i].data().content
+               });
+           }
+        }
+        res.status(200);
+        res.send(result);
     } catch (e) {
         res.status(400);
         res.send(e);
