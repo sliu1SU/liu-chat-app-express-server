@@ -81,7 +81,6 @@ app.get('/', async (req, res)=>{
     }
 });
 
-// need 3 apis for authentication
 // api handles sign up
 app.post('/signup/', async (req, res)=>{
     const {email, password} = req.body;
@@ -153,7 +152,11 @@ app.get('/rooms/', async (req, res)=>{
         if (!snapshot.empty) {
             snapshot = snapshot.docs; // convert to array
             for (let i = 0; i < snapshot.length; i++) {
-                rooms.push({id: snapshot[i].id});
+                rooms.push({
+                    id: snapshot[i].id,
+                    name: snapshot[i].data().name,
+                    description: snapshot[i].data().description
+                });
             }
         }
         res.status(200);
@@ -190,7 +193,8 @@ app.get('/room/:id', async (req, res)=>{
            for (let i = 0; i < snapshot.length; i++) {
                result.push({
                    id: snapshot[i].id,
-                   content: snapshot[i].data().content
+                   content: snapshot[i].data().content,
+                   time: snapshot[i].data().time
                });
            }
         }
