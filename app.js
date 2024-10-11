@@ -170,6 +170,7 @@ app.get('/rooms/', async (req, res)=>{
 // api handles add documents to an existing collection (msg)
 app.post('/room/:id', async (req, res)=>{
     const roomId = req.params.id;  // Extract the ID from the URL
+    console.log(req.body);
     try {
         const msgCollection = collection(db, 'Rooms', roomId, 'Messages');
         const docRef = await addDoc(msgCollection, req.body);
@@ -194,7 +195,8 @@ app.get('/room/:id', async (req, res)=>{
                result.push({
                    id: snapshot[i].id,
                    content: snapshot[i].data().content,
-                   time: snapshot[i].data().time
+                   time: snapshot[i].data().time,
+                   sender: snapshot[i].data().sender,
                });
            }
         }
