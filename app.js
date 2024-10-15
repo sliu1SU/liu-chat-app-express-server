@@ -1,10 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const authMW = require("./authMW");
 const app = express();
 const PORT = 3000;
 
 // Middleware to parse JSON
 app.use(bodyParser.json());
+// Middleware to parse cookies
+app.use(cookieParser());
+// middleware to handle verify if cookie is available
+app.use(authMW());
 
 // Import the functions you need from the SDKs you need
 const { initializeApp } = require("firebase/app");
@@ -21,6 +27,7 @@ const {
     addDoc,
     collection
 } = require('firebase/firestore');
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
