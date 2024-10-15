@@ -5,6 +5,9 @@ const authMW = require("./authMW");
 const app = express();
 const PORT = 3000;
 
+// cookies duration
+const cookiesDuration = 30000;
+
 // Middleware to parse JSON
 app.use(bodyParser.json());
 // Middleware to parse cookies
@@ -97,7 +100,6 @@ app.post('/signup/', async (req, res)=>{
         const userCredential  = await createUserWithEmailAndPassword(firebaseAuth, email, password);
         const user = userCredential.user;
         // Set the token in a cookie
-        res.cookie('authToken', user.stsTokenManager.accessToken);
         res.status(200);
         res.send(user);
     } catch (e) {
@@ -113,7 +115,7 @@ app.post('/login/', async (req, res)=>{
         const userCredential  = await signInWithEmailAndPassword(firebaseAuth, email, password);
         const user = userCredential.user;
         // Set the token in a cookie
-        res.cookie('authToken', user.stsTokenManager.accessToken);
+        res.cookie('authToken', user.stsTokenManager.accessToken, {maxAge: cookiesDuration});
         res.status(200);
         res.send(user);
     } catch (e) {
@@ -177,7 +179,6 @@ app.get('/rooms/', async (req, res)=>{
 // api handles add documents to an existing collection (msg)
 app.post('/room/:id', async (req, res)=>{
     const roomId = req.params.id;  // Extract the ID from the URL
-    console.log(req.body);
     try {
         const msgCollection = collection(db, 'Rooms', roomId, 'Messages');
         const docRef = await addDoc(msgCollection, req.body);
