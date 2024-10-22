@@ -1,5 +1,5 @@
 // cookies duration
-const cookiesDuration = 1000 * 30 * 60;
+const cookiesDuration = require("./cookiesDuration");
 
 function authMW() {
     return async function (req, res, next){

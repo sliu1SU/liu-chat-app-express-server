@@ -2,11 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const authMW = require("./authMW");
+const cookiesDuration = require("./cookiesDuration");
 const app = express();
 const PORT = 3000;
-
-// cookies duration
-const cookiesDuration = 1000 * 30 * 60;
 
 // Middleware to parse JSON
 app.use(bodyParser.json());
