@@ -6,7 +6,7 @@ const app = express();
 const PORT = 3000;
 
 // cookies duration
-const cookiesDuration = 30000;
+const cookiesDuration = 1000 * 30 * 60;
 
 // Middleware to parse JSON
 app.use(bodyParser.json());
@@ -210,6 +210,24 @@ app.get('/room/:id', async (req, res)=>{
         }
         res.status(200);
         res.send(result);
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+    }
+});
+
+// api to get the current user if there is any
+app.get('/user', async (req, res)=>{
+    try {
+        const curUser = firebaseAuth.currentUser;
+        if (curUser) {
+            res.status(200);
+            res.send(curUser);
+        } else {
+            // no one is signed in
+            res.status(200);
+            res.send();
+        }
     } catch (e) {
         res.status(400);
         res.send(e);

@@ -1,10 +1,10 @@
 // cookies duration
-const cookiesDuration = 30000;
+const cookiesDuration = 1000 * 30 * 60;
 
 function authMW() {
     return async function (req, res, next){
-        //console.log('auth middleware is called!');
-        if (req.path === "/login/" || req.path === "/signup/" || req.path === "/logoff/") {
+        if (req.path === "/login/" || req.path === "/signup/"
+            || req.path === "/logoff/") {
             // let the req through
             next();
             return;
