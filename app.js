@@ -26,7 +26,8 @@ const {
     getDoc,
     getDocs,
     addDoc,
-    collection
+    collection,
+    onSnapshot
 } = require('firebase/firestore');
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -150,28 +151,64 @@ app.post('/rooms/', async (req, res)=>{
     }
 });
 
-// api handles getting all rooms
+// // api handles getting all rooms
+// app.get('/rooms/', async (req, res)=>{
+//     let rooms = [];
+//     try {
+//         const roomsCollection = collection(db, 'Rooms');  // Reference the 'Rooms' collection
+//         let snapshot = await getDocs(roomsCollection);  // Fetch all documents
+//         if (!snapshot.empty) {
+//             snapshot = snapshot.docs; // convert to array
+//             for (let i = 0; i < snapshot.length; i++) {
+//                 rooms.push({
+//                     id: snapshot[i].id,
+//                     name: snapshot[i].data().name,
+//                     description: snapshot[i].data().description
+//                 });
+//             }
+//         }
+//         res.status(200);
+//         res.send(rooms);
+//     } catch (e) {
+//         res.status(400);
+//         res.send(e);
+//     }
+// });
+
+// api handles getting all rooms SSE
 app.get('/rooms/', async (req, res)=>{
-    let rooms = [];
-    try {
-        const roomsCollection = collection(db, 'Rooms');  // Reference the 'Rooms' collection
-        let snapshot = await getDocs(roomsCollection);  // Fetch all documents
-        if (!snapshot.empty) {
-            snapshot = snapshot.docs; // convert to array
-            for (let i = 0; i < snapshot.length; i++) {
-                rooms.push({
-                    id: snapshot[i].id,
-                    name: snapshot[i].data().name,
-                    description: snapshot[i].data().description
-                });
-            }
-        }
-        res.status(200);
-        res.send(rooms);
-    } catch (e) {
-        res.status(400);
-        res.send(e);
-    }
+    // Set headers for SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // Firestore reference to the 'Rooms' collection
+    const roomsCollection = collection(db, 'Rooms');
+
+    // Set up Firestore onSnapshot listener to track real-time changes in the Rooms collection
+    const unsubscribe = onSnapshot(roomsCollection, (snapshot) => {
+        let rooms = [];
+
+        snapshot.forEach((doc) => {
+            rooms.push({
+                id: doc.id,
+                name: doc.data().name,
+                description: doc.data().description
+            });
+        });
+
+        // Send the rooms data to the client in SSE format
+        res.write(`data: ${JSON.stringify(rooms)}\n\n`);
+    }, (error) => {
+        // Handle Firestore errors
+        res.status(500).write(`data: ${JSON.stringify({ error: 'Error fetching rooms' })}\n\n`);
+    });
+
+    // Handle client closing the connection
+    req.on('close', () => {
+        unsubscribe();  // Stop listening for updates when client disconnects
+        res.end();
+    });
 });
 
 // api handles add documents to an existing collection (msg)
@@ -213,6 +250,42 @@ app.get('/room/:id', async (req, res)=>{
         res.send(e);
     }
 });
+
+// // api handles getting all msgs from a room server-sent-event
+// app.get('/room/:id', async (req, res)=>{
+//     const roomId = req.params.id;  // Extract the ID from the URL
+//
+//     // Set headers for SSE
+//     res.setHeader('Content-Type', 'text/event-stream');
+//     res.setHeader('Cache-Control', 'no-cache');
+//     res.setHeader('Connection', 'keep-alive');
+//
+//     try {
+//         const msgCollection = collection(db, 'Rooms', roomId, 'Messages');
+//         const unsubscribe = onSnapshot(msgCollection, (snapshot) => {
+//             let result = [];
+//             snapshot.forEach((doc) => {
+//                 result.push({
+//                     id: doc.id,
+//                     content: doc.data().content,
+//                     time: doc.data().time,
+//                     sender: doc.data().sender,
+//                 });
+//             });
+//             // Send the messages to the client as SSE
+//             res.write(`data: ${JSON.stringify(result)}\n\n`);
+//
+//             // Handle client closing the connection
+//             req.on('close', () => {
+//                 unsubscribe();  // Unsubscribe from Firestore listener when client disconnects
+//                 res.end();
+//             });
+//         });
+//     } catch (e) {
+//         // Handle Firestore errors
+//         res.status(500).write(`data: ${JSON.stringify({ error: 'Error fetching messages' })}\n\n`);
+//     }
+// });
 
 // api to get the current user if there is any
 app.get('/user', async (req, res)=>{
